@@ -30,7 +30,7 @@ def test_search(mem):
 
 
 def test_mcp_tools(mem):
-    import memory_mcp
+    import jarvis_mcp as memory_mcp
     importlib.reload(memory_mcp)
     r = memory_mcp.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
                            "params": {"name": "remember", "arguments": {"title": "A", "content": "B"}}})

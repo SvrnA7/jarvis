@@ -24,6 +24,7 @@ Mikrofon → Chrome Web Speech API (de-DE) → WebSocket → FastAPI (server.py)
 - `ANTHROPIC_*`-Variablen werden entfernt, damit nie über die API abgerechnet wird
 - WebSocket nimmt nur Verbindungen von der eigenen Seite an
 - **Gedächtnis:** Jarvis merkt sich Dinge dauerhaft, auch über Neustarts hinweg (siehe unten)
+- **Einnahmen:** Jarvis nennt dir Umsatz, MRR und Abos deiner Apps aus RevenueCat (nur lesend)
 - **Windows** ist die Zielplattform: `start.bat` richtet alles ein und startet
 
 ## Voraussetzungen
@@ -56,9 +57,24 @@ dauerhaft wichtig ist.
 - Beim Start schreibt `brain.py` Persona und Index in `data/home/CLAUDE.md`. Claude Code
   liest diese Datei von selbst, so kennt Jarvis sein Gedächtnis sofort.
 - Die Werkzeuge `remember`, `recall`, `forget` und `list_memories` liefert ein kleiner
-  MCP-Server (`memory_mcp.py`). Andere MCP-Server aus deiner Claude-Konfiguration
+  MCP-Server (`jarvis_mcp.py`). Andere MCP-Server aus deiner Claude-Konfiguration
   werden bewusst ignoriert (`--strict-mcp-config`).
 - Übersicht im Browser: http://localhost:8340/api/memory
+
+## Einnahmen (RevenueCat)
+
+Frag zum Beispiel „Wie viel Umsatz haben meine Apps gemacht?“ oder „Wie läuft die Fitness-App?“.
+Jarvis nennt Umsatz der letzten 28 Tage, MRR, aktive Abos, Testphasen und neue Kunden.
+
+Einrichten:
+1. Im RevenueCat-Dashboard: Projekt → **API Keys** → **+ New secret API key**, Version **v2**.
+2. Nur Leserechte vergeben: *Project configuration: Read* und *Charts & metrics: Read*.
+   Alles andere auf „No access“. So kann Jarvis nichts verändern.
+3. Den Key in die `.env` eintragen: `REVENUECAT_API_KEY=sk_...` (mehrere Projekte kommagetrennt).
+   Optional `REVENUECAT_CURRENCY=EUR`.
+
+Der Code dafür steht in `revenue.py`. Die Zahlen werden fünf Minuten zwischengespeichert,
+weil RevenueCat nur 25 Abfragen pro Minute erlaubt.
 
 Tests: `python -m pytest tests`
 

@@ -56,9 +56,11 @@ def prepare_home() -> Path:
     """Schreibt CLAUDE.md (Persona + Gedächtnisindex) und die MCP-Konfiguration."""
     HOME.mkdir(parents=True, exist_ok=True)
     (HOME / "CLAUDE.md").write_text(persona(), encoding="utf-8")
-    cfg = {"mcpServers": {"memory": {
-        "command": sys.executable, "args": [str(ROOT / "memory_mcp.py")],
-        "env": {"JARVIS_DATA_DIR": str(memory.DATA), "PYTHONIOENCODING": "utf-8"},
+    # Schlüssel wie REVENUECAT_API_KEY erbt der Werkzeug-Server aus der Umgebung,
+    # damit sie nicht zusätzlich im Klartext in dieser Datei landen.
+    env = {"JARVIS_DATA_DIR": str(memory.DATA), "PYTHONIOENCODING": "utf-8"}
+    cfg = {"mcpServers": {"jarvis": {
+        "command": sys.executable, "args": [str(ROOT / "jarvis_mcp.py")], "env": env,
     }}}
     path = HOME / "mcp.json"
     path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
@@ -87,8 +89,8 @@ class Brain:
             "--include-partial-messages", "--verbose",
             "--model", self.model,
             "--mcp-config", str(mcp_config), "--strict-mcp-config",
-            "--allowedTools", "WebSearch,WebFetch,mcp__memory__remember,mcp__memory__recall,"
-                              "mcp__memory__forget,mcp__memory__list_memories",
+            "--allowedTools", "WebSearch,WebFetch,mcp__jarvis__remember,mcp__jarvis__recall,"
+                              "mcp__jarvis__forget,mcp__jarvis__list_memories,mcp__jarvis__app_revenue",
         ]
 
     async def start(self) -> None:

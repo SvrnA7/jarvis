@@ -1,6 +1,7 @@
 """
-memory_mcp.py — kleiner MCP-Server (stdio, JSON-RPC), der dem Gehirn die
-Gedächtnis-Werkzeuge gibt. Wird von brain.py über --mcp-config gestartet.
+jarvis_mcp.py — kleiner MCP-Server (stdio, JSON-RPC), der dem Gehirn Jarvis'
+eigene Werkzeuge gibt: Gedächtnis und Einnahmen. Wird von brain.py über
+--mcp-config gestartet.
 """
 from __future__ import annotations
 
@@ -8,6 +9,7 @@ import json
 import sys
 
 import memory
+import revenue
 
 TOOLS = [
     {
@@ -37,6 +39,14 @@ TOOLS = [
         "description": "Alle gespeicherten Erinnerungen mit Titel und erster Zeile auflisten.",
         "inputSchema": {"type": "object", "properties": {}},
     },
+    {
+        "name": "app_revenue",
+        "description": "Einnahmen der eigenen Apps aus RevenueCat lesen (nur lesend): Umsatz der "
+                       "letzten 28 Tage, MRR, aktive Abos, Testphasen, neue Kunden. Ohne 'app' "
+                       "kommen alle Apps.",
+        "inputSchema": {"type": "object", "properties": {
+            "app": {"type": "string", "description": "optional: Name oder Teil des App-Namens"}}},
+    },
 ]
 
 
@@ -55,6 +65,8 @@ def call(name: str, args: dict) -> str:
         return "Gelöscht." if memory.forget(args["title"]) else "Keine solche Erinnerung."
     if name == "list_memories":
         return memory.write_index()
+    if name == "app_revenue":
+        return revenue.report(args.get("app"))
     raise ValueError(f"Unbekanntes Werkzeug: {name}")
 
 
@@ -65,7 +77,7 @@ def handle(req: dict) -> dict | None:
     if method == "initialize":
         result = {"protocolVersion": req.get("params", {}).get("protocolVersion", "2024-11-05"),
                   "capabilities": {"tools": {}},
-                  "serverInfo": {"name": "jarvis-memory", "version": "0.1.0"}}
+                  "serverInfo": {"name": "jarvis", "version": "0.1.0"}}
     elif method == "tools/list":
         result = {"tools": TOOLS}
     elif method == "tools/call":
